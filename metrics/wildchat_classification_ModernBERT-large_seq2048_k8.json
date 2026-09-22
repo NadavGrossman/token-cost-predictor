@@ -1,0 +1,23 @@
+{
+  "label": "wildchat",
+  "mode": "classification",
+  "encoder": "modernbert",
+  "n_buckets": 8,
+  "results": {
+    "distilbert": {
+      "accuracy": 0.434,
+      "macro_f1": 0.4389,
+      "off_by_one": 0.77
+    },
+    "majority": {
+      "accuracy": 0.1273,
+      "macro_f1": 0.0282,
+      "off_by_one": 0.377
+    },
+    "input_length": {
+      "accuracy": 0.1835,
+      "macro_f1": 0.1364,
+      "off_by_one": 0.3994
+    }
+  }
+}

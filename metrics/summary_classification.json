@@ -1,0 +1,36 @@
+{
+  "llama8b_generated": {
+    "distilbert": {
+      "accuracy": 0.5413,
+      "macro_f1": 0.5396,
+      "off_by_one": 0.8711
+    },
+    "majority": {
+      "accuracy": 0.2595,
+      "macro_f1": 0.103,
+      "off_by_one": 0.5364
+    },
+    "input_length": {
+      "accuracy": 0.2603,
+      "macro_f1": 0.1997,
+      "off_by_one": 0.5893
+    }
+  },
+  "wildchat": {
+    "distilbert": {
+      "accuracy": 0.5868,
+      "macro_f1": 0.5922,
+      "off_by_one": 0.9121
+    },
+    "majority": {
+      "accuracy": 0.2525,
+      "macro_f1": 0.1008,
+      "off_by_one": 0.7502
+    },
+    "input_length": {
+      "accuracy": 0.3308,
+      "macro_f1": 0.2489,
+      "off_by_one": 0.6092
+    }
+  }
+}

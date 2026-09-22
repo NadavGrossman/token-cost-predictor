@@ -1,0 +1,25 @@
+[project]
+name = "cs-workshop"
+version = "0.1.0"
+description = "Predict LLM output-token cost from a query with a DistilBERT heteroscedastic regressor"
+requires-python = ">=3.11"
+dependencies = [
+    "datasets>=2.20",
+    "huggingface-hub>=0.23",
+    "ollama>=0.3",
+    "pandas>=2.2",
+    "pyarrow>=16",
+    "transformers>=4.41",
+    "torch>=2.3",
+    "accelerate>=0.30",
+    "scikit-learn>=1.5",
+    "tqdm>=4.66",
+    "tiktoken>=0.7",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/token_cost"]

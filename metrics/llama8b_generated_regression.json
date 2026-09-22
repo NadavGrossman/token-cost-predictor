@@ -1,0 +1,39 @@
+{
+  "label": "llama8b_generated",
+  "mode": "regression",
+  "results": {
+    "distilbert": {
+      "nll": 1.5127,
+      "log_mae": 0.6908,
+      "log_rmse": 1.0495,
+      "token_mae": 145.53,
+      "token_rmse": 221.32,
+      "cov@0.80": 0.7967,
+      "width@0.80": 735.7,
+      "cov@0.95": 0.9058,
+      "width@0.95": 1789.5
+    },
+    "marginal": {
+      "nll": 1.7618,
+      "log_mae": 1.1811,
+      "log_rmse": 1.4089,
+      "token_mae": 256.93,
+      "token_rmse": 357.99,
+      "cov@0.80": 0.7959,
+      "width@0.80": 1056.2,
+      "cov@0.95": 0.9512,
+      "width@0.95": 2814.6
+    },
+    "input_length": {
+      "nll": 1.7493,
+      "log_mae": 1.1562,
+      "log_rmse": 1.3914,
+      "token_mae": 251.83,
+      "token_rmse": 351.59,
+      "cov@0.80": 0.8149,
+      "width@0.80": 1051.6,
+      "cov@0.95": 0.9496,
+      "width@0.95": 2762.3
+    }
+  }
+}

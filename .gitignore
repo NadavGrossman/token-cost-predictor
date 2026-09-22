@@ -1,0 +1,27 @@
+.env
+cs-workshop-src.tar.gz
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+.cursor/
+
+# HF cache
+.cache/
+
+# Raw downloads and generated labels stay off this branch.
+data/
+
+# Training logs are not model checkpoints.
+models/**/*.log
+
+# Output generation: labelers and the scripts/docs that build the report.
+src/token_cost/generate_labels.py
+src/token_cost/sample_prompts.py
+src/token_cost/download_data.py
+src/token_cost/build_labels.py
+src/token_cost/audit_lengths.py
+scripts/
+docs/
+reports/~$*

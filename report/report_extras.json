@@ -1,0 +1,47 @@
+{
+  "labels": [
+    "Short",
+    "Medium",
+    "Long",
+    "Very long"
+  ],
+  "confusion_counts": [
+    [
+      8077,
+      2379,
+      413,
+      483
+    ],
+    [
+      1181,
+      5524,
+      3708,
+      948
+    ],
+    [
+      400,
+      3044,
+      5710,
+      1892
+    ],
+    [
+      310,
+      1401,
+      2435,
+      7096
+    ]
+  ],
+  "log_input_output_corr": 0.339,
+  "distilbert_per_class_recall": [
+    0.7115,
+    0.4862,
+    0.5169,
+    0.6312
+  ],
+  "distilbert_short_to_verylong": 0.0425,
+  "distilbert_verylong_to_short": 0.0276,
+  "modernbert_4way_accuracy": 0.6033,
+  "modernbert_4way_off_by_one": 0.9332,
+  "modernbert_8way_accuracy": 0.434,
+  "modernbert_8way_off_by_one": 0.77
+}

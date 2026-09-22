@@ -1,0 +1,150 @@
+{
+  "edges": [
+    229,
+    418,
+    592
+  ],
+  "labels": [
+    "0\u2013229",
+    "230\u2013418",
+    "419\u2013592",
+    "593+"
+  ],
+  "bucket_names": [
+    "Short",
+    "Medium",
+    "Long",
+    "Very long"
+  ],
+  "n_train": 209999,
+  "n_test": 45001,
+  "overall": {
+    "mae": 141.79250233894746,
+    "median_ae": 84.89450011624331,
+    "mean_rel_pct": 81.04781171602981,
+    "median_rel_pct": 24.702410164754205,
+    "mean_len": 447.3957245394547,
+    "median_len": 416.0
+  },
+  "buckets": [
+    {
+      "bucket": 0,
+      "name": "Short",
+      "range": "0\u2013229",
+      "n_train": 52519,
+      "pct_train": 25.009166710317672,
+      "avg_tokens": 90.33386012681125,
+      "median_tokens": 76.0,
+      "n_test": 11352,
+      "mae": 81.06446986358532,
+      "median_ae": 36.63482268455615,
+      "mean_rel_pct": 241.3312149270544,
+      "median_rel_pct": 45.61668011202981,
+      "example": {
+        "bucket": 0,
+        "name": "Short",
+        "range": "0\u2013229",
+        "tokens": 86,
+        "prompt": "Can you use cloudflare dns settings and set it to a url instead of ip?"
+      }
+    },
+    {
+      "bucket": 1,
+      "name": "Medium",
+      "range": "230\u2013418",
+      "n_train": 52767,
+      "pct_train": 25.12726251077386,
+      "avg_tokens": 338.40225898762486,
+      "median_tokens": 346.0,
+      "n_test": 11361,
+      "mae": 104.57341598680512,
+      "median_ae": 90.99578420387644,
+      "mean_rel_pct": 31.983498104267603,
+      "median_rel_pct": 26.471379279261058,
+      "example": {
+        "bucket": 1,
+        "name": "Medium",
+        "range": "230\u2013418",
+        "tokens": 323,
+        "prompt": "How to design perfect learning module to master anything?"
+      }
+    },
+    {
+      "bucket": 2,
+      "name": "Long",
+      "range": "419\u2013592",
+      "n_train": 52277,
+      "pct_train": 24.893928066324126,
+      "avg_tokens": 495.7126078390114,
+      "median_tokens": 490.0,
+      "n_test": 11046,
+      "mae": 92.89736290675589,
+      "median_ae": 62.00556431055281,
+      "mean_rel_pct": 18.559299203313504,
+      "median_rel_pct": 12.398973822870014,
+      "example": {
+        "bucket": 2,
+        "name": "Long",
+        "range": "419\u2013592",
+        "tokens": 497,
+        "prompt": "Problems of integration of ICT in school"
+      }
+    },
+    {
+      "bucket": 3,
+      "name": "Very long",
+      "range": "593+",
+      "n_train": 52436,
+      "pct_train": 24.969642712584346,
+      "avg_tokens": 866.7285834159737,
+      "median_tokens": 758.0,
+      "n_test": 11242,
+      "mae": 288.77047555323213,
+      "median_ae": 196.65823002521776,
+      "mean_rel_pct": 30.17880112246504,
+      "median_rel_pct": 26.159004063353343,
+      "example": {
+        "bucket": 3,
+        "name": "Very long",
+        "range": "593+",
+        "tokens": 708,
+        "prompt": "Write a blog post about the 2008 dub of Smeshariki, GoGoRiki, and the date it premiered on"
+      }
+    }
+  ],
+  "regression": {
+    "distilbert": {
+      "nll": 0.7512,
+      "log_mae": 0.4074,
+      "log_rmse": 0.6414,
+      "token_mae": 141.79,
+      "token_rmse": 249.99,
+      "cov@0.80": 0.8227,
+      "width@0.80": 472.2,
+      "cov@0.95": 0.9406,
+      "width@0.95": 862.4
+    },
+    "marginal": {
+      "nll": 1.5706,
+      "log_mae": 0.8361,
+      "log_rmse": 1.1637,
+      "token_mae": 258.76,
+      "token_rmse": 375.8,
+      "cov@0.80": 0.8632,
+      "width@0.80": 1248.1,
+      "cov@0.95": 0.9299,
+      "width@0.95": 2857.9
+    },
+    "input_length": {
+      "nll": 1.5096,
+      "log_mae": 0.7777,
+      "log_rmse": 1.0949,
+      "token_mae": 235.89,
+      "token_rmse": 356.14,
+      "cov@0.80": 0.8623,
+      "width@0.80": 1219.7,
+      "cov@0.95": 0.9369,
+      "width@0.95": 2688.9
+    }
+  }
+}

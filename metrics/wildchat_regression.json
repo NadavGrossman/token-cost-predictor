@@ -1,0 +1,39 @@
+{
+  "label": "wildchat",
+  "mode": "regression",
+  "results": {
+    "distilbert": {
+      "nll": 0.7512,
+      "log_mae": 0.4074,
+      "log_rmse": 0.6414,
+      "token_mae": 141.79,
+      "token_rmse": 249.99,
+      "cov@0.80": 0.8227,
+      "width@0.80": 472.2,
+      "cov@0.95": 0.9406,
+      "width@0.95": 862.4
+    },
+    "marginal": {
+      "nll": 1.5706,
+      "log_mae": 0.8361,
+      "log_rmse": 1.1637,
+      "token_mae": 258.76,
+      "token_rmse": 375.8,
+      "cov@0.80": 0.8632,
+      "width@0.80": 1248.1,
+      "cov@0.95": 0.9299,
+      "width@0.95": 2857.9
+    },
+    "input_length": {
+      "nll": 1.5096,
+      "log_mae": 0.7777,
+      "log_rmse": 1.0949,
+      "token_mae": 235.89,
+      "token_rmse": 356.14,
+      "cov@0.80": 0.8623,
+      "width@0.80": 1219.7,
+      "cov@0.95": 0.9369,
+      "width@0.95": 2688.9
+    }
+  }
+}
