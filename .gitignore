@@ -16,7 +16,7 @@ data/
 # Training logs are not model checkpoints.
 models/**/*.log
 
-# Output generation: labelers and the scripts/docs that build the report.
+# Local files from the full project; not part of this branch.
 src/token_cost/generate_labels.py
 src/token_cost/sample_prompts.py
 src/token_cost/download_data.py

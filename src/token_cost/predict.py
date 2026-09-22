@@ -1,5 +1,5 @@
 """
-Step 6b — Cache per-prompt test-set predictions to a parquet file.
+Cache per-prompt test-set predictions to a parquet file.
 
 ``evaluate`` only stores aggregate metrics; downstream consumers (e.g. the
 queue-scheduling simulation) need the model's prediction for each prompt.

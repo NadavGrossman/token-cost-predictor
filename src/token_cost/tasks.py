@@ -1,9 +1,8 @@
 """
 Predictor tasks — pick the modeling approach with one ``--mode`` flag.
 
-Two tasks share the *entire* pipeline (sampling, labeling, splits, the DistilBERT
-backbone and training loop) and differ only in the small, well-defined surface
-collected here:
+Two tasks share the splits, the encoder backbone, and the training loop, and
+differ only in the small, well-defined surface collected here:
 
   classification  4 length buckets, cross-entropy        -> accuracy / macro-F1
   regression      heteroscedastic Gaussian (mu, log std) -> NLL / calibrated range
@@ -126,7 +125,7 @@ class ClassificationTask(Task):
         inp_b    = self._to_bucket(test_df["prompt_eval_count"], edges)
 
         return {
-            "distilbert":   self._metrics(true_b, model_b),
+            "model":        self._metrics(true_b, model_b),
             "majority":     self._metrics(true_b, maj_b),
             "input_length": self._metrics(true_b, inp_b),
         }
@@ -198,7 +197,7 @@ class RegressionTask(Task):
                np.full(len(test_df), resid_std))
 
         return {
-            "distilbert":   self._metrics(counts, mu_log, sigma_log),
+            "model":        self._metrics(counts, mu_log, sigma_log),
             "marginal":     self._metrics(counts, *marg),
             "input_length": self._metrics(counts, *inp),
         }

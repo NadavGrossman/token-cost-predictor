@@ -54,13 +54,9 @@ def main(mode: str = config.DEFAULT_MODE) -> None:
     task = tasks.get_task(mode)
 
     all_results: dict[str, dict] = {}
-    for name, cfg in config.DATASETS.items():
-        if cfg.get("skip_default_experiments"):
-            print(f"\n[{name}] skipped by default (cloud dataset).")
-            continue
+    for name in config.DATASETS:
         if not dataset_ready(name):
-            print(f"\n[{name}] labeled.jsonl not found — skipping. "
-                  f"(Run generate_labels or build_labels first.)")
+            print(f"\n[{name}] labeled.jsonl not found — skipping.")
             continue
         all_results[name] = run_per_dataset(name, mode)
 
@@ -74,12 +70,12 @@ def main(mode: str = config.DEFAULT_MODE) -> None:
     cols = task.summary_cols
     header = f"{'experiment':<35}" + "".join(f"{c:>12}" for c in cols)
     print(f"\n{'='*len(header)}")
-    print(f"SUMMARY — DistilBERT ({mode}) across all experiments")
+    print(f"SUMMARY — fine-tuned encoder ({mode})")
     print(f"{'='*len(header)}\n{header}\n{'-'*len(header)}")
     for exp_name, res in all_results.items():
-        db = res.get("distilbert")
-        if db:
-            print(f"{exp_name:<35}" + "".join(f"{db[c]:>12}" for c in cols))
+        row = res.get("model")
+        if row:
+            print(f"{exp_name:<35}" + "".join(f"{row[c]:>12}" for c in cols))
     print(f"{'='*len(header)}")
     print(f"\nFull results -> {summary_file}")
 

@@ -3,7 +3,7 @@
   "mode": "classification",
   "encoder": "modernbert",
   "results": {
-    "distilbert": {
+    "model": {
       "accuracy": 0.6033,
       "macro_f1": 0.6095,
       "off_by_one": 0.9332

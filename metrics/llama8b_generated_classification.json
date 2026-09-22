@@ -2,7 +2,7 @@
   "label": "llama8b_generated",
   "mode": "classification",
   "results": {
-    "distilbert": {
+    "model": {
       "accuracy": 0.5413,
       "macro_f1": 0.5396,
       "off_by_one": 0.8711

@@ -2,7 +2,7 @@
   "label": "llama8b_generated",
   "mode": "regression",
   "results": {
-    "distilbert": {
+    "model": {
       "nll": 1.5127,
       "log_mae": 0.6908,
       "log_rmse": 1.0495,

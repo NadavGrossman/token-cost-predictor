@@ -1,5 +1,5 @@
 """
-Step 6 — Evaluate the trained predictor and its baselines on the test set.
+Evaluate the trained predictor and its baselines on the test set.
 
 Mode-agnostic: runs the fine-tuned model over the test split to get raw logits,
 then hands them to the selected ``Task`` which computes the appropriate metrics
@@ -15,13 +15,13 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from torch.utils.data import DataLoader
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 from token_cost import config
 from token_cost import tasks
 from token_cost.tasks import Task
 from token_cost.train import PromptDataset, collect_logits, get_device, make_collate
-from torch.utils.data import DataLoader
 
 
 def model_logits(test_df: pd.DataFrame, model_dir: Path, task: Task, artifact: dict,

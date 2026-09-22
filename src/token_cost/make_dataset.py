@@ -1,5 +1,5 @@
 """
-Steps 3 & 4 — Create the (shared) train/val/test splits and the per-mode artifact.
+Create the shared train/val/test splits and the per-mode artifact.
 
 The 70/15/15 split is deterministic and identical for both predictor modes, so
 the two are compared on the exact same rows. Only the small derived artifact
@@ -34,12 +34,6 @@ def _load_or_create_splits(dataset: str, splits_dir: Path, max_rows: int | None)
     print(f"[{dataset}] Loaded {len(df):,} labeled rows")
     print(f"  eval_count stats:\n{df['eval_count'].describe().to_string()}")
 
-    dedupe_by = config.DATASETS[dataset].get("dedupe_by")
-    if dedupe_by and dedupe_by in df.columns:
-        before = len(df)
-        df = df.drop_duplicates(subset=[dedupe_by], keep="first").reset_index(drop=True)
-        print(f"  deduped on {dedupe_by}: {before:,} -> {len(df):,}")
-
     if max_rows and len(df) > max_rows:
         df = df.sample(n=max_rows, random_state=config.RANDOM_SEED).reset_index(drop=True)
         print(f"  capped to {len(df):,} rows (max_rows={max_rows:,})")
@@ -60,6 +54,8 @@ def _load_or_create_splits(dataset: str, splits_dir: Path, max_rows: int | None)
 
 def main(dataset: str, mode: str = config.DEFAULT_MODE, max_rows: int | None = None,
          n_buckets: int | None = None) -> None:
+    if max_rows is None:
+        max_rows = config.DATASETS[dataset]["max_rows"]
     splits_dir: Path = config.dataset_paths(dataset)["splits_dir"]
     splits_dir.mkdir(parents=True, exist_ok=True)
 

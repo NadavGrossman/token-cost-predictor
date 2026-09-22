@@ -113,7 +113,7 @@
     }
   ],
   "regression": {
-    "distilbert": {
+    "model": {
       "nll": 0.7512,
       "log_mae": 0.4074,
       "log_rmse": 0.6414,

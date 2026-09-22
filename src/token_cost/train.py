@@ -1,5 +1,5 @@
 """
-Step 5 — Fine-tune an encoder for the chosen predictor mode.
+Fine-tune an encoder for the chosen predictor mode.
 
 The training loop is mode-agnostic: the per-row target, output-head size, loss
 and validation score all come from the selected ``Task`` (see tasks.py). DistilBERT
@@ -8,7 +8,7 @@ Existing checkpoints are not overwritten unless ``--force`` is passed.
 
 Usage:
     uv run python -m token_cost.train --dataset wildchat --mode classification
-    uv run python -m token_cost.train --dataset wildchat48m --mode classification --encoder modernbert
+    uv run python -m token_cost.train --dataset wildchat --mode classification --encoder modernbert --n-buckets 8
 """
 import argparse
 from pathlib import Path

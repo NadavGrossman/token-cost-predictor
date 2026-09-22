@@ -1,30 +1,19 @@
 """Central config — all tuneable knobs in one place."""
-import os
 from pathlib import Path
 
 # Repo root is two levels above this file (src/token_cost/config.py).
 ROOT = Path(__file__).resolve().parents[2]
 
-# Load .env if present (sets HF_TOKEN etc. without requiring python-dotenv)
-_env_file = ROOT / ".env"
-if _env_file.exists():
-    for _line in _env_file.read_text().splitlines():
-        _line = _line.strip()
-        if _line and not _line.startswith("#") and "=" in _line:
-            _k, _v = _line.split("=", 1)
-            os.environ.setdefault(_k.strip(), _v.strip())
-
 # ── Paths ─────────────────────────────────────────────────────────────────────
 DATA_DIR    = ROOT / "data"
 MODELS_DIR  = ROOT / "models"
 METRICS_DIR = ROOT / "metrics"
-S3_BUCKET   = os.environ.get("S3_BUCKET", "cs-workshop-token-cost-343798904084")
 
 # ── Shared settings ───────────────────────────────────────────────────────────
 RANDOM_SEED = 42
 
 # ── Predictor mode ────────────────────────────────────────────────────────────
-# "classification" -> 4 length buckets (cross-entropy);
+# "classification" -> length buckets (cross-entropy);
 # "regression"     -> heteroscedastic Gaussian (per-prompt mean + std).
 # Every step takes --mode; this is just the default when it is omitted.
 DEFAULT_MODE = "regression"
@@ -42,15 +31,9 @@ COVERAGE_LEVELS = (0.80, 0.95)
 TRAIN_FRAC = 0.70
 VAL_FRAC   = 0.15
 
-# ── Label generation (Ollama "generate" labeler) ──────────────────────────────
-MAX_NEW_TOKENS: int | None = None   # cap on generated tokens; None = unbounded
-
-# ── Existing-response labeler (token counting) ────────────────────────────────
-REFERENCE_TOKENIZER = "cl100k_base"   # tiktoken / GPT tokenizer
-
 # ── Encoder presets ───────────────────────────────────────────────────────────
-# Default stays DistilBERT @ 256 so existing checkpoints/metrics keep working.
-# Cloud ablation uses --encoder modernbert (isolated model/metrics paths).
+# distilbert: default runs, 256-token context.
+# modernbert: WildChat classification at 2048 tokens, with 4- and 8-way buckets.
 ENCODERS: dict[str, dict] = {
     "distilbert": {
         "hf_id": "distilbert-base-uncased",
@@ -64,11 +47,9 @@ ENCODERS: dict[str, dict] = {
     },
 }
 DEFAULT_ENCODER = "distilbert"
-BASE_MODEL    = ENCODERS[DEFAULT_ENCODER]["hf_id"]
 MAX_SEQ_LEN   = ENCODERS[DEFAULT_ENCODER]["max_seq_len"]
 BATCH_SIZE    = 32
 EPOCHS        = 6
-LEARNING_RATE = ENCODERS[DEFAULT_ENCODER]["learning_rate"]
 
 # ── Regression-specific training controls ─────────────────────────────────────
 # LOG_SIGMA_CLAMP: prevents sigma collapse (model pushing log σ to -∞ on training
@@ -95,57 +76,33 @@ DECODE_TOKENS_PER_SEC = 50.0
 SERVICE_OVERHEAD_SEC  = 0.5
 
 # ── Dataset registry ──────────────────────────────────────────────────────────
-# Adding a dataset is one entry here; all paths derive from the name (dataset_paths).
-# labeler: "generate" = sample prompts + run a model (Ollama); "existing" = count
-#          output tokens from responses already present in the dataset.
+# max_rows caps the training pool. None keeps every labeled row.
+# Provenance of each dataset is described in the README.
 DATASETS: dict[str, dict] = {
-    "llama8b_generated": {
-        "hf_dataset":   "lmsys/lmsys-chat-1m",
-        "labeler":      "generate",
-        "ollama_model": "llama3.1:8b",
-        "n_prompts":    20_000,
-        "max_rows":     None,
-    },
-    "wildchat": {
-        "hf_dataset": "allenai/WildChat-1M",
-        "labeler":    "existing",
-        "max_rows":   300_000,   # training cap; counting is uncapped
-    },
-    # Cloud dataset: new directory, never writes into data/wildchat/.
-    "wildchat48m": {
-        "hf_dataset": "allenai/WildChat-4.8M",
-        "labeler":    "existing",
-        "max_rows":   None,
-        "stream_from_hf": True,
-        "include_model_prefixes": ["gpt-4o"],
-        "exclude_model_prefixes": ["o1-preview", "o1-mini", "gpt-4o-mini"],
-        "dedupe_by": "query",
-        "skip_default_experiments": True,
-    },
+    "llama8b_generated": {"max_rows": None},
+    "wildchat":          {"max_rows": 300_000},
 }
 
 
 def dataset_paths(name: str) -> dict[str, Path]:
-    """Mode-agnostic, shared file-system layout for a dataset.
+    """Shared file-system layout for a dataset.
 
-    Raw data, prompts, labels and the train/val/test splits are identical across
-    predictor modes — only the trained model and metrics are mode-specific (see
-    ``model_dir`` / ``metrics_file``), and each mode's small derived artifact
-    (bucket edges or target stats) lives in ``splits_dir`` under its own name.
+    Labels and the train/val/test splits are identical across predictor modes.
+    The trained model and metrics are mode-specific (see ``model_dir`` /
+    ``metrics_file``). Each mode's small derived artifact (bucket edges or
+    target stats) lives in ``splits_dir`` under its own name.
     """
     if name not in DATASETS:
         raise ValueError(f"Unknown dataset '{name}'. Choose from: {list(DATASETS)}")
     base = DATA_DIR / name
     return {
-        "raw_dir":      base / "raw",
-        "prompts_file": base / "prompts.parquet",
         "labeled_file": base / "labeled.jsonl",
         "splits_dir":   base / "splits",
     }
 
 
 def encoder_spec(encoder: str | None = None) -> dict:
-    """Resolve an encoder preset. Unknown names raise KeyError with the allow-list."""
+    """Resolve an encoder preset. Unknown names raise ValueError with the allow-list."""
     name = encoder or DEFAULT_ENCODER
     if name not in ENCODERS:
         raise ValueError(f"Unknown encoder '{name}'. Choose from: {list(ENCODERS)}")
@@ -154,7 +111,7 @@ def encoder_spec(encoder: str | None = None) -> dict:
 
 def run_slug(encoder: str | None = None, max_seq_len: int | None = None,
              n_buckets: int | None = None) -> str | None:
-    """None for the legacy DistilBERT@256 k=4 layout so old artifacts stay put."""
+    """None for the DistilBERT@256 k=4 layout so those artifacts stay put."""
     name = encoder or DEFAULT_ENCODER
     spec = encoder_spec(name)
     seq = spec["max_seq_len"] if max_seq_len is None else max_seq_len
@@ -196,8 +153,3 @@ def predictions_file(name: str, mode: str, encoder: str | None = None,
     if slug is None:
         return DATA_DIR / name / f"predictions_{mode}.parquet"
     return DATA_DIR / name / f"predictions_{mode}_{slug}.parquet"
-
-
-def datasets_with_labeler(labeler: str) -> list[str]:
-    """Names of datasets whose labels are produced by the given labeler."""
-    return [name for name, cfg in DATASETS.items() if cfg["labeler"] == labeler]

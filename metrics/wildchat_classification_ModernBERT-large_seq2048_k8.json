@@ -4,7 +4,7 @@
   "encoder": "modernbert",
   "n_buckets": 8,
   "results": {
-    "distilbert": {
+    "model": {
       "accuracy": 0.434,
       "macro_f1": 0.4389,
       "off_by_one": 0.77
