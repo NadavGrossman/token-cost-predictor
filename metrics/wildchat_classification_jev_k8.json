@@ -1,0 +1,29 @@
+{
+  "label": "wildchat",
+  "mode": "classification",
+  "model": "jev-1.13.0",
+  "n_buckets": 8,
+  "max_prompt_tokens": 2048,
+  "results": {
+    "model": {
+      "accuracy": 0.3208,
+      "macro_f1": 0.271,
+      "off_by_one": 0.5842
+    },
+    "majority": {
+      "accuracy": 0.1273,
+      "macro_f1": 0.0282,
+      "off_by_one": 0.377
+    },
+    "input_length": {
+      "accuracy": 0.1835,
+      "macro_f1": 0.1364,
+      "off_by_one": 0.3994
+    }
+  },
+  "modernbert_8_bucket": {
+    "accuracy": 0.434,
+    "macro_f1": 0.4389,
+    "off_by_one": 0.77
+  }
+}

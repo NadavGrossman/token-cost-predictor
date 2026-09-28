@@ -16,6 +16,12 @@ data/
 # Training logs are not model checkpoints.
 models/**/*.log
 
+# Weights are downloaded from Hugging Face. See the README.
+models/**/*.safetensors
+
+# Local archives
+*.zip
+
 # Local files from the full project; not part of this branch.
 src/token_cost/generate_labels.py
 src/token_cost/sample_prompts.py

@@ -10,6 +10,8 @@ dependencies = [
     "transformers>=4.41",
     "torch>=2.3",
     "scikit-learn>=1.5",
+    "typesafe-sdk[http2]>=0.7.2",
+    "tiktoken>=0.14.0",
 ]
 
 [build-system]

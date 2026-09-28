@@ -1,113 +1,101 @@
-# Predicting LLM Token Cost from a Query
+# Predicting output-token cost from a prompt
 
-Given a text query, predict how many **output tokens** an LLM will generate to answer it — *before* running the model. Output tokens dominate inference cost, so predicting them from the prompt alone lets a developer estimate the cost of a query in advance.
+Predict how many tokens an LLM will generate for a query before you run it. The predictor sees only the prompt. Output length is what dominates inference cost.
 
-This repository contains the predictor code, the fine-tuned checkpoints, and the results. The labeled datasets are large and are not included. Re-training or re-scoring a checkpoint needs `data/<dataset>/splits/` (and `labeled.jsonl` if the splits are not already built).
+Two heads, chosen with `--mode`:
 
-## Approach
+| Mode | Prediction |
+|------|------------|
+| `classification` | One length bucket (4 or 8 quantile buckets) |
+| `regression` (default) | A median token count, plus an 80% and 95% interval |
 
-- **Prompt-only**: predict from the query text alone, with no access to the model's internal state.
-- **Output tokens only**: input tokens are trivial to count; the response length is the hard, useful part.
-- **A range, not an exact count**: sampling randomness makes exact counts unpredictable, while a range is both achievable and sufficient for cost estimation.
-
-Two encoders are fine-tuned. **DistilBERT** (~66M parameters, 256-token context) is the default. **ModernBERT-large** (2048-token context) is used for the longer WildChat classification runs. Two interchangeable **predictor modes** express "a range" differently — pick one with `--mode`:
-
-| Mode | Head | What it predicts | Trained with |
-|------|------|------------------|--------------|
-| `classification` | 4 or 8 logits | One length **bucket** (quantile edges from the training set) | cross-entropy |
-| `regression` | 2 logits | A per-prompt **mean ± std** of `log1p(tokens)` (heteroscedastic Gaussian) | Gaussian NLL |
-
-`regression` is the default (`DEFAULT_MODE` in [`src/token_cost/config.py`](src/token_cost/config.py)). It turns each prompt into a median token estimate plus an asymmetric, never-negative interval (e.g. *≈340 tokens, 80% interval 120–910*), which composes cleanly for budgeting. `targets.predict_summary` converts a regression prediction into that token-space forecast. `classification` is the simpler bucketed view.
-
-## Datasets
-
-Each predictor is trained for a single target LLM, because answer length depends on the model that writes the answer. Labels are the output-token count of the first user turn in single-turn English conversations.
-
-| Dataset | Target LLM | Where the counts come from |
-|---------|------------|----------------------------|
-| `llama8b_generated` | Llama 3.1 8B | Prompts from [LMSYS-Chat-1M](https://huggingface.co/datasets/lmsys/lmsys-chat-1m), answered by Llama 3.1 8B. The count is the model's own. |
-| `wildchat` | ChatGPT | [WildChat-1M](https://huggingface.co/datasets/allenai/WildChat-1M). Counts use the GPT tokenizer (`cl100k_base`). Training uses a 300,000-row cap. |
-
-The same labeled rows and the **same train/val/test split** feed both modes, so the two are directly comparable. Adding a mode is one entry in the `Task` registry in [`tasks.py`](src/token_cost/tasks.py).
-
-## Experiments
-
-### Baselines
-
-- `classification`: **Majority bucket** (always the most common bucket) and **Input-length rule** (bucket from prompt length).
-- `regression`: **Marginal** (predict the training mean/std — the no-signal floor) and **Input-length** (linear fit of log-output on log-input length; residual std as uncertainty).
-
-### Metrics
-
-In the metrics JSON, the fine-tuned model is the `model` row.
-
-- `classification`: **bucket accuracy**, **macro F1**, **off-by-one rate** (within one bucket of the truth).
-- `regression`: **NLL** (Gaussian negative log-likelihood, lower is better), point-estimate **MAE/RMSE** (log and token space), and **calibration** — empirical coverage of the predicted 80%/95% intervals (should match the nominal level) plus mean interval width.
-
-Success means beating the baselines: higher accuracy/F1 for classification, lower NLL with well-calibrated coverage for regression.
-
-## Checkpoints
-
-| Path | Encoder | Task |
-|------|---------|------|
-| `models/llama8b_generated/classification/` | DistilBERT | 4 buckets |
-| `models/llama8b_generated/regression/` | DistilBERT | mean ± std |
-| `models/wildchat/classification/` | DistilBERT | 4 buckets |
-| `models/wildchat/regression/` | DistilBERT | mean ± std |
-| `models/wildchat/classification/ModernBERT-large_seq2048/` | ModernBERT-large | 4 buckets, 2048 tokens |
-| `models/wildchat/classification/ModernBERT-large_seq2048_k8/` | ModernBERT-large | 8 buckets, 2048 tokens |
-
-An existing checkpoint is left in place unless `--force` is passed.
-
-## Results
-
-| Path | Contents |
-|------|----------|
-| `metrics/` | Test metrics for each dataset, mode, and encoder, plus the queue-simulation runs |
-| `report/` | Figures and the summary stats behind the write-up |
-| `reports/` | The write-up (Word, PDF, and slides) |
+Each checkpoint is trained for one target LLM. `llama8b_generated` predicts Llama 3.1 8B (prompts from LMSYS-Chat-1M). `wildchat` predicts ChatGPT on English [WildChat](https://huggingface.co/datasets/allenai/WildChat-1M) conversations, with counts from the GPT tokenizer (`cl100k_base`). DistilBERT (256-token context) is the default encoder. ModernBERT-large (2048-token context) is used for the longer WildChat classification runs.
 
 ## Setup
 
-Requires Python 3.11 and [uv](https://docs.astral.sh/uv/).
+Python 3.11 and [uv](https://docs.astral.sh/uv/).
 
 ```bash
 uv sync
 ```
 
-## Usage
+## Download the checkpoints
+
+The weight files are published on Hugging Face under [Nadi-Boss](https://huggingface.co/Nadi-Boss). They are public, so no token is required. This repo keeps the tokenizer and config files; `uv sync` is enough to download the weights into the folders the code reads.
 
 ```bash
-# Train and evaluate every dataset for one mode.
-# Skips a step when its artifact already exists.
+uv run python <<'PY'
+from huggingface_hub import snapshot_download
+
+CHECKPOINTS = {
+    "Nadi-Boss/token-cost-llama8b-distilbert-4bucket": "models/llama8b_generated/classification",
+    "Nadi-Boss/token-cost-llama8b-distilbert-regression": "models/llama8b_generated/regression",
+    "Nadi-Boss/token-cost-wildchat-distilbert-4bucket": "models/wildchat/classification",
+    "Nadi-Boss/token-cost-wildchat-distilbert-regression": "models/wildchat/regression",
+    "Nadi-Boss/token-cost-wildchat-modernbert-4bucket": "models/wildchat/classification/ModernBERT-large_seq2048",
+    "Nadi-Boss/token-cost-wildchat-modernbert-8bucket": "models/wildchat/classification/ModernBERT-large_seq2048_k8",
+}
+
+for repo_id, local_dir in CHECKPOINTS.items():
+    snapshot_download(repo_id, local_dir=local_dir)
+    print(f"{repo_id} -> {local_dir}")
+PY
+```
+
+To fetch a single checkpoint with the Hugging Face CLI:
+
+```bash
+hf download Nadi-Boss/token-cost-wildchat-modernbert-8bucket \
+  --local-dir models/wildchat/classification/ModernBERT-large_seq2048_k8
+```
+
+| Hub repo | Saved to | Checkpoint |
+|----------|----------|------------|
+| [token-cost-llama8b-distilbert-4bucket](https://huggingface.co/Nadi-Boss/token-cost-llama8b-distilbert-4bucket) | `models/llama8b_generated/classification/` | DistilBERT, 4 buckets |
+| [token-cost-llama8b-distilbert-regression](https://huggingface.co/Nadi-Boss/token-cost-llama8b-distilbert-regression) | `models/llama8b_generated/regression/` | DistilBERT, mean ± std |
+| [token-cost-wildchat-distilbert-4bucket](https://huggingface.co/Nadi-Boss/token-cost-wildchat-distilbert-4bucket) | `models/wildchat/classification/` | DistilBERT, 4 buckets |
+| [token-cost-wildchat-distilbert-regression](https://huggingface.co/Nadi-Boss/token-cost-wildchat-distilbert-regression) | `models/wildchat/regression/` | DistilBERT, mean ± std |
+| [token-cost-wildchat-modernbert-4bucket](https://huggingface.co/Nadi-Boss/token-cost-wildchat-modernbert-4bucket) | `models/wildchat/classification/ModernBERT-large_seq2048/` | ModernBERT-large, 4 buckets |
+| [token-cost-wildchat-modernbert-8bucket](https://huggingface.co/Nadi-Boss/token-cost-wildchat-modernbert-8bucket) | `models/wildchat/classification/ModernBERT-large_seq2048_k8/` | ModernBERT-large, 8 buckets |
+
+Classification repos include `bucket_edges.json`. Regression repos include `target_stats.json`, which converts the two logits back into a token count. Training, evaluation, and the queue simulation also need `data/<dataset>/splits/`. Those labeled rows are large and are not in this repository.
+
+## Project layout
+
+```
+src/token_cost/
+  config.py           paths, encoders, datasets
+  tasks.py            classification and regression
+  targets.py          log-token math for the regression head
+  make_dataset.py     70/15/15 split, bucket edges, target stats
+  train.py            fine-tune; keeps an existing checkpoint unless --force
+  evaluate.py         test metrics against simple baselines
+  predict.py          one prediction per test prompt
+  simulate_queue.py   queue simulation from those predictions
+  experiments.py      make_dataset, then train, then evaluate
+  jev_classify.py     Jev API baseline on the 8-bucket WildChat task
+models/               checkpoints (weights downloaded from Hugging Face)
+metrics/              evaluation JSON; the fine-tuned model is the "model" row
+report/               figures
+reports/              write-up
+data/                 labeled rows and splits (not in git)
+tests/                tests for the Jev comparison
+```
+
+Settings live in `src/token_cost/config.py`.
+
+## Run
+
+```bash
 uv run python -m token_cost.experiments --mode regression
 uv run python -m token_cost.experiments --mode classification
 
-# Or run a single step for one dataset + mode
-uv run python -m token_cost.make_dataset --dataset wildchat --mode regression
-uv run python -m token_cost.train        --dataset wildchat --mode regression
-uv run python -m token_cost.evaluate     --dataset wildchat --mode regression
+# ModernBERT, 8 buckets
+uv run python -m token_cost.train    --dataset wildchat --mode classification --encoder modernbert --n-buckets 8
+uv run python -m token_cost.evaluate --dataset wildchat --mode classification --encoder modernbert --n-buckets 8
 
-# ModernBERT classification (4-way, or 8-way with --n-buckets 8)
-uv run python -m token_cost.train    --dataset wildchat --mode classification --encoder modernbert
-uv run python -m token_cost.evaluate --dataset wildchat --mode classification --encoder modernbert
-
-# Cache per-prompt test predictions, then run the queue simulation
 uv run python -m token_cost.predict        --dataset wildchat --mode classification
 uv run python -m token_cost.simulate_queue --dataset wildchat
 ```
 
-`make_dataset` builds a 70/15/15 split from `data/<dataset>/labeled.jsonl` and writes the mode's artifact (bucket edges or target stats) next to it. Later steps reuse that split.
-
-## Layout
-
-```
-src/token_cost/            predictor package (config.py lives here)
-models/<dataset>/<mode>/   fine-tuned encoder
-metrics/                   evaluation and queue-simulation JSON
-report/                    figures
-reports/                   write-up
-data/<dataset>/            labeled rows and splits (not included)
-```
-
-Key settings live in [`src/token_cost/config.py`](src/token_cost/config.py).
+`experiments` skips a step whose output is already on disk. Classification reports bucket accuracy, macro F1, and off-by-one rate. Regression reports Gaussian NLL, token error, and coverage of the 80% and 95% intervals.
